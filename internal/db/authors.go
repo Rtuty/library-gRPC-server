@@ -2,50 +2,52 @@ package db
 
 import (
 	"context"
+
 	"modules/internal/models"
 )
 
-// AddNewAuthor добавляет нового автора в базу данных, предварительно проверяя, существует ли создаваемый автор
+// CreateNewAuthor добавляет нового автора в базу данных, предварительно проверяя, существует ли создаваемый автор
 func (db *dataBase) CreateNewAuthor(ctx context.Context, author models.Author) error {
 	var exists bool
 
-	db.client.QueryRowContext(ctx, "select exists(select 1 from authors where name = $1)", author.Name).Scan(&exists)
+	db.client.QueryRowContext(ctx, "select exists(select 1 from authors where name = ?)", author.Name).Scan(&exists)
 
 	if exists {
-		return dublicateEror
+		return dublicateError
 	}
 
-	t, err := db.client.BeginTx(ctx, nil)
-	if err != nil {
-		return beginError
-	}
-
-	// todo: придумать реализацию для книг автора
-	if _, err := t.ExecContext(ctx, "insert into authors (name, books) values ($1, $2)", author.Name, author.Books); err != nil {
+	if err := executeQuery(ctx, db.client, "insert into authors (name, country) values (?, ?)", []any{author.Name, author.Country}); err != nil {
 		return err
 	}
 
-	if err := t.Commit(); err != nil {
-		return commitError
+	return nil
+}
+
+// UpdateAuthor обновляет поля в таблице author в базе данных
+func (db *dataBase) UpdateAuthor(ctx context.Context, author models.Author) error {
+	if err := executeQuery(ctx, db.client, "update authors set name = ?, country = ? where id = ?", []any{author.Name, author.Country, author.ID}); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (db *dataBase) UpdateAuthor(id string, book models.Author) error {
-	return nil
-}
-func (db *dataBase) DeleteAuthor(id string) error {
+// DeleteAuthor удаляет сущность автор из базы данных
+func (db *dataBase) DeleteAuthor(ctx context.Context, id string) error {
+	if err := executeQuery(ctx, db.client, "delete from authors where id = ?", []any{id}); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// GET Authors methods
-func (db *dataBase) GetAllAuthors() ([]models.Author, error) {
+// GetAllAuthors возвращает всех авторов из базы данных
+func (db *dataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) {
 	return []models.Author{}, nil
 }
-func (db *dataBase) GetAuthorById(id string) (models.Author, error) {
+func (db *dataBase) GetAuthorById(ctx context.Context, id string) (models.Author, error) {
 	return models.Author{}, nil
 }
-func (db *dataBase) GetAuthorsByBookName(name string) ([]models.Author, error) {
+func (db *dataBase) GetAuthorsByBookName(ctx context.Context, name string) ([]models.Author, error) {
 	return []models.Author{}, nil
 }

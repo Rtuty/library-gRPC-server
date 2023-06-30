@@ -2,30 +2,30 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	_ "github.com/go-sql-driver/mysql"
 
 	"modules/internal/models"
+
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Методы базы данных
 type Repository interface {
-	CreateNewBook(book models.Book) error
-	UpdateBook(id string, book models.Book) error
-	DeleteBook(id string) error
+	CreateNewBook(ctx context.Context, book models.Book) error
+	UpdateBook(ctx context.Context, book models.Book) error
+	DeleteBook(ctx context.Context, id string) error
 
 	CreateNewAuthor(ctx context.Context, author models.Author) error
-	UpdateAuthor(id string, book models.Author) error
-	DeleteAuthor(id string) error
+	UpdateAuthor(ctx context.Context, author models.Author) error
+	DeleteAuthor(ctx context.Context, id string) error
 
 	GetAllBooks(ctx context.Context) ([]models.Book, error)
-	GetBookById(id string) (models.Book, error)
-	GetBooksByAuthorName(name string) ([]models.Book, error)
+	GetBookById(ctx context.Context, id string) (models.Book, error)
+	GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error)
 
-	GetAllAuthors() ([]models.Author, error)
-	GetAuthorById(id string) (models.Author, error)
-	GetAuthorsByBookName(name string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
+	GetAllAuthors(ctx context.Context) ([]models.Author, error)
+	GetAuthorById(ctx context.Context, id string) (models.Author, error)
+	GetAuthorsByBookName(ctx context.Context, name string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
 }
 
 type dataBase struct {
@@ -35,10 +35,3 @@ type dataBase struct {
 func NewMySqlConnection(connection *sql.DB) Repository {
 	return &dataBase{client: connection}
 }
-
-var (
-	dublicateEror = errors.New("the entity being created already exists in the database")
-	// transaction errors
-	beginError  = errors.New("failed to open transaction")
-	commitError = errors.New("failed to commit transaction")
-)
