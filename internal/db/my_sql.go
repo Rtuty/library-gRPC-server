@@ -11,13 +11,9 @@ import (
 
 // Методы базы данных
 type Repository interface {
-	CreateNewBook(ctx context.Context, book models.Book) error
-	UpdateBook(ctx context.Context, book models.Book) error
-	DeleteBook(ctx context.Context, id string) error
-
-	CreateNewAuthor(ctx context.Context, author models.Author) error
-	UpdateAuthor(ctx context.Context, author models.Author) error
-	DeleteAuthor(ctx context.Context, id string) error
+	// operation (create, update, delete)
+	bookMethodsHandler(ctx context.Context, operation string, book models.Book) error       // factory handler
+	authorMethodsHandler(ctx context.Context, operation string, author models.Author) error //factory handler
 
 	GetAllBooks(ctx context.Context) ([]models.Book, error)
 	GetBookById(ctx context.Context, id string) (models.Book, error)
@@ -25,7 +21,7 @@ type Repository interface {
 
 	GetAllAuthors(ctx context.Context) ([]models.Author, error)
 	GetAuthorById(ctx context.Context, id string) (models.Author, error)
-	GetAuthorsByBookName(ctx context.Context, name string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
+	GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
 }
 
 type dataBase struct {

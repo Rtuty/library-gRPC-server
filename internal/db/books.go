@@ -5,19 +5,34 @@ import (
 	"modules/internal/models"
 )
 
-// POST/PUT/DELETE Books methods
-func (db *dataBase) CreateNewBook(ctx context.Context, book models.Book) error {
-	return nil
-}
-func (db *dataBase) UpdateBook(ctx context.Context, book models.Book) error {
-	if err := executeQuery(ctx, db.client, "update books set title = ?, author_id = ?, description = ? where id = ?", []any{book.Title, book.AuthorId, book.Description, book.ID}); err != nil {
-		return err
+// bookMethodsHandler паттерн простая фабрика, получает указание операции и структуру книги, после чего производит манипуляцию в базе данных
+func (db *dataBase) bookMethodsHandler(ctx context.Context, operation string, book models.Book) error {
+	var query string
+	var args []any
+
+	switch operation {
+	case "create": // добавляет новую книгу в базу данных, предварительно проверяя, существует ли создаваемый объект в бд
+		var exists bool
+
+		db.client.QueryRowContext(ctx, "select exists(select 1 from books where id = ?)", book.ID).Scan(&exists)
+		if exists {
+			return dublicateError
+		}
+
+		query = "insert into books (title, author_id, description) values (?, ?, ?)"
+		args = []any{book.Title, book.AuthorId, book.Description}
+
+	case "update": // обновляет поля в таблице books в базе данных
+		query = "update books set title = ?, author_id = ?, description = ? where id = ?"
+		args = []any{book.Title, book.AuthorId, book.Description, book.ID}
+
+	case "delete": // удаляет сущность book из базы данных
+		query = "delete from authors where id = ?"
+		args = []any{book.ID}
+
 	}
 
-	return nil
-}
-func (db *dataBase) DeleteBook(ctx context.Context, id string) error {
-	if err := executeQuery(ctx, db.client, "delete from books where id = ?", []any{id}); err != nil {
+	if err := executeQuery(ctx, db.client, query, args); err != nil {
 		return err
 	}
 
