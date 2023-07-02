@@ -12,8 +12,8 @@ import (
 // Методы базы данных
 type Repository interface {
 	// operation (create, update, delete)
-	bookMethodsHandler(ctx context.Context, operation string, book models.Book) error       // factory handler
-	authorMethodsHandler(ctx context.Context, operation string, author models.Author) error //factory handler
+	BookMethodsHandler(ctx context.Context, operation string, book models.Book) error       // factory handler
+	AuthorMethodsHandler(ctx context.Context, operation string, author models.Author) error //factory handler
 
 	GetAllBooks(ctx context.Context) ([]models.Book, error)
 	GetBookById(ctx context.Context, id string) (models.Book, error)
@@ -28,6 +28,6 @@ type dataBase struct {
 	client *sql.DB
 }
 
-func NewMySqlConnection(connection *sql.DB) Repository {
+func NewMySqlRepository(connection *sql.DB) Repository {
 	return &dataBase{client: connection}
 }

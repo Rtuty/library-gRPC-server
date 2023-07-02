@@ -7,34 +7,42 @@ import (
 )
 
 // authorMethodsHandler паттерн простая фабрика, получает указание операции и структуру автора, после чего производит манипуляцию в базе данных
-func (db *dataBase) authorMethodsHandler(ctx context.Context, operation string, author models.Author) error {
-	var query string
-	var args []any
+func (db *dataBase) AuthorMethodsHandler(ctx context.Context, operation string, author models.Author) error {
+	t, err := db.client.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 
 	switch operation {
 	case "create": // добавляет нового автора в базу данных, предварительно проверяя, существует ли создаваемый объект в бд
 		var exists bool
 
-		db.client.QueryRowContext(ctx, "select exists(select 1 from authors where name = ?)", author.Name).Scan(&exists)
+		t.QueryRowContext(ctx, "select exists(select 1 from authors where name = ?)", author.Name).Scan(&exists)
 		if exists {
+			if err = t.Rollback(); err != nil {
+				return rollbackError
+			}
+
 			return dublicateError
 		}
 
-		query = "insert into authors (name, country) values (?, ?)"
-		args = []interface{}{author.Name, author.Country}
+		if _, err = t.ExecContext(ctx, "insert into authors (name, country) values (?, ?)", author.Name, author.Country); err != nil {
+			return execError
+		}
 
-	case "update": //обновляет поля в таблице authors в базе данных
-		query = "update authors set name = ?, country = ? where id = ?"
-		args = []interface{}{author.Name, author.Country, author.ID}
+	case "update": //обновляет поля в таблице authors в базе данных TODO Не работает
+		if _, err = t.ExecContext(ctx, "update authors set name = ?, country = ? where id = ?", author.Name, author.Country, author.ID); err != nil {
+			return execError
+		}
 
 	case "delete": // удаляет сущность author из базы данных
-		query = "delete from authors where id = ?"
-		args = []interface{}{author.ID}
-
+		if _, err = t.ExecContext(ctx, "delete from authors where id = ?", author.ID); err != nil {
+			return execError
+		}
 	}
 
-	if err := executeQuery(ctx, db.client, query, args); err != nil {
-		return err
+	if err = t.Commit(); err != nil {
+		return commitError
 	}
 
 	return nil
@@ -68,8 +76,6 @@ func (db *dataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]m
 	}
 
 	authors, err := scanAuthorRows(r)
-	return []models.Author{}, nil
-
 	if err != nil {
 		return nil, scanError
 	}

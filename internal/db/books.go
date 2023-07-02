@@ -6,9 +6,11 @@ import (
 )
 
 // bookMethodsHandler паттерн простая фабрика, получает указание операции и структуру книги, после чего производит манипуляцию в базе данных
-func (db *dataBase) bookMethodsHandler(ctx context.Context, operation string, book models.Book) error {
-	var query string
-	var args []any
+func (db *dataBase) BookMethodsHandler(ctx context.Context, operation string, book models.Book) error {
+	t, err := db.client.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 
 	switch operation {
 	case "create": // добавляет новую книгу в базу данных, предварительно проверяя, существует ли создаваемый объект в бд
@@ -19,21 +21,23 @@ func (db *dataBase) bookMethodsHandler(ctx context.Context, operation string, bo
 			return dublicateError
 		}
 
-		query = "insert into books (title, author_id, description) values (?, ?, ?)"
-		args = []any{book.Title, book.AuthorId, book.Description}
+		if _, err = t.ExecContext(ctx, "insert into books (title, author_id, description) values (?, ?, ?)", book.Title, book.AuthorId, book.Description); err != nil {
+			return execError
+		}
 
 	case "update": // обновляет поля в таблице books в базе данных
-		query = "update books set title = ?, author_id = ?, description = ? where id = ?"
-		args = []any{book.Title, book.AuthorId, book.Description, book.ID}
+		if _, err = t.ExecContext(ctx, "update books set title = ?, author_id = ?, description = ? where id = ?", book.Title, book.AuthorId, book.Description, book.ID); err != nil {
+			return execError
+		}
 
 	case "delete": // удаляет сущность book из базы данных
-		query = "delete from authors where id = ?"
-		args = []any{book.ID}
-
+		if _, err = t.ExecContext(ctx, "delete from authors where id = ?", book.ID); err != nil {
+			return execError
+		}
 	}
 
-	if err := executeQuery(ctx, db.client, query, args); err != nil {
-		return err
+	if err = t.Commit(); err != nil {
+		return commitError
 	}
 
 	return nil
@@ -41,8 +45,21 @@ func (db *dataBase) bookMethodsHandler(ctx context.Context, operation string, bo
 
 // GET Books methods
 func (db *dataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
-	return []models.Book{}, nil
+	q := "select id, title, author_id, description from books"
+
+	r, err := db.client.QueryContext(ctx, q)
+	if err != nil {
+		return nil, rowsQueryError
+	}
+
+	books, err := scanBooksRows(r)
+	if err != nil {
+		return nil, scanError
+	}
+
+	return books, nil
 }
+
 func (db *dataBase) GetBookById(ctx context.Context, id string) (models.Book, error) {
 	return models.Book{}, nil
 }

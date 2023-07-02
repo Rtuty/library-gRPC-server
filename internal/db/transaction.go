@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"modules/internal/models"
@@ -14,28 +13,11 @@ var (
 	scanError      = errors.New("error when scanning strings after query execution")
 	rowsQueryError = errors.New("executed query returning strings failed with an error")
 	// transaction errors
-	beginError  = errors.New("failed to open transaction")
-	execError   = errors.New("executing sql query error")
-	commitError = errors.New("failed to commit transaction")
+	beginError    = errors.New("failed to open transaction")
+	execError     = errors.New("executing sql query error")
+	commitError   = errors.New("failed to commit transaction")
+	rollbackError = errors.New("failed to rollback transaction")
 )
-
-// executeQuery открывает транзакцию и исполняет запрос
-func executeQuery(ctx context.Context, c *sql.DB, q string, args []any) error {
-	t, err := c.BeginTx(ctx, nil) //opts todo
-	if err != nil {
-		return beginError
-	}
-
-	if _, err = t.ExecContext(ctx, q, args); err != nil {
-		return execError
-	}
-
-	if err = t.Commit(); err != nil {
-		return commitError
-	}
-
-	return nil
-}
 
 func scanAuthorRows(r *sql.Rows) ([]models.Author, error) {
 	var authors []models.Author
@@ -55,4 +37,24 @@ func scanAuthorRows(r *sql.Rows) ([]models.Author, error) {
 	}
 
 	return authors, nil
+}
+
+func scanBooksRows(r *sql.Rows) ([]models.Book, error) {
+	var books []models.Book
+
+	for r.Next() {
+		var b models.Book
+
+		if err := r.Scan(&b.ID, &b.Title, &b.AuthorId, &b.Description); err != nil {
+			return nil, scanError
+		}
+
+		books = append(books, b)
+	}
+
+	if err := r.Err(); err != nil {
+		return nil, scanError
+	}
+
+	return books, nil
 }
