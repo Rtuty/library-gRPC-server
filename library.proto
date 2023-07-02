@@ -1,0 +1,40 @@
+syntax = "proto3";
+option go_package = "modules/invoicer";
+
+// Logic models
+message Author {
+  int64 ID = 1;
+  string Name = 2;
+  string Country = 3;
+}
+
+message Book {
+  int64 ID = 1;
+  string Title = 2;
+  string AuthorId = 3;
+  string Description =4;
+}
+
+// Requests
+message CUDAuthorRequest {
+  string operation = 1;
+  Author Author = 2;
+}
+
+message CUDBookRequest {
+  string operation = 1;
+  Book Book = 2;
+}
+
+// Responses
+message CUDResponse {
+  string result = 1;
+}
+
+
+// Service handlers
+// CUD == C-create, U-update, D-delete DataBase sql functionality
+service Library {
+  rpc HandlerAuthorCUD(CUDAuthorRequest) returns (CUDResponse);
+  rpc HandlerBookCUD(CUDAuthorRequest) returns (CUDResponse);
+}
