@@ -61,8 +61,16 @@ func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 }
 
 func (db *DataBase) GetBookById(ctx context.Context, id string) (models.Book, error) {
+	//q := "select id, title, author_id, description from books"
+	//
+	//r, err := db.client.QueryContext(ctx, q)
+	//if err != nil {
+	//	return models.Book{}, rowsQueryError
+	//}
+
 	return models.Book{}, nil
 }
 func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error) {
+	//q := "select id, title, author_id, description from books where author_id = ?"
 	return []models.Book{}, nil
 }

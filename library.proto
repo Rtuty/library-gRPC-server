@@ -26,15 +26,29 @@ message CUDBookRequest {
   Book Book = 2;
 }
 
+message DefaultRequest {}
+
 // Responses
-message CUDResponse {
+message DefaultResponse {
   string result = 1;
 }
 
+message GetAuthorResponse {
+  string result = 1;
+}
+
+message GetBookResponse {
+  string result = 1;
+}
 
 // Service handlers
-// CUD == C-create, U-update, D-delete DataBase sql functionality
 service Library {
-  rpc HandlerAuthorCUD(CUDAuthorRequest) returns (CUDResponse);
-  rpc HandlerBookCUD(CUDAuthorRequest) returns (CUDResponse);
+  // CUD == C-create, U-update, D-delete DataBase sql functionality
+  rpc HandleAuthorCUD(CUDAuthorRequest) returns (DefaultResponse);
+  rpc HandleBookCUD(CUDBookRequest) returns (DefaultResponse);
+
+  // Get handlers
+  rpc HandleGettAllAuthors(DefaultRequest) returns (GetAuthorResponse);
+  rpc HandleGetAllBooks(DefaultRequest) returns (DefaultResponse);
+
 }

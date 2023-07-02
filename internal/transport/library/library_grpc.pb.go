@@ -22,8 +22,12 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LibraryClient interface {
-	HandlerAuthorCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*CUDResponse, error)
-	HandlerBookCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*CUDResponse, error)
+	// CUD == C-create, U-update, D-delete DataBase sql functionality
+	HandleAuthorCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
+	HandleBookCUD(ctx context.Context, in *CUDBookRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
+	// Get handlers
+	HandleGettAllAuthors(ctx context.Context, in *DefaultRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error)
+	HandleGetAllBooks(ctx context.Context, in *DefaultRequest, opts ...grpc.CallOption) (*DefaultResponse, error)
 }
 
 type libraryClient struct {
@@ -34,18 +38,36 @@ func NewLibraryClient(cc grpc.ClientConnInterface) LibraryClient {
 	return &libraryClient{cc}
 }
 
-func (c *libraryClient) HandlerAuthorCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*CUDResponse, error) {
-	out := new(CUDResponse)
-	err := c.cc.Invoke(ctx, "/Library/HandlerAuthorCUD", in, out, opts...)
+func (c *libraryClient) HandleAuthorCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
+	out := new(DefaultResponse)
+	err := c.cc.Invoke(ctx, "/Library/HandleAuthorCUD", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *libraryClient) HandlerBookCUD(ctx context.Context, in *CUDAuthorRequest, opts ...grpc.CallOption) (*CUDResponse, error) {
-	out := new(CUDResponse)
-	err := c.cc.Invoke(ctx, "/Library/HandlerBookCUD", in, out, opts...)
+func (c *libraryClient) HandleBookCUD(ctx context.Context, in *CUDBookRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
+	out := new(DefaultResponse)
+	err := c.cc.Invoke(ctx, "/Library/HandleBookCUD", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *libraryClient) HandleGettAllAuthors(ctx context.Context, in *DefaultRequest, opts ...grpc.CallOption) (*GetAuthorResponse, error) {
+	out := new(GetAuthorResponse)
+	err := c.cc.Invoke(ctx, "/Library/HandleGettAllAuthors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *libraryClient) HandleGetAllBooks(ctx context.Context, in *DefaultRequest, opts ...grpc.CallOption) (*DefaultResponse, error) {
+	out := new(DefaultResponse)
+	err := c.cc.Invoke(ctx, "/Library/HandleGetAllBooks", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +78,12 @@ func (c *libraryClient) HandlerBookCUD(ctx context.Context, in *CUDAuthorRequest
 // All implementations must embed UnimplementedLibraryServer
 // for forward compatibility
 type LibraryServer interface {
-	HandlerAuthorCUD(context.Context, *CUDAuthorRequest) (*CUDResponse, error)
-	HandlerBookCUD(context.Context, *CUDAuthorRequest) (*CUDResponse, error)
+	// CUD == C-create, U-update, D-delete DataBase sql functionality
+	HandleAuthorCUD(context.Context, *CUDAuthorRequest) (*DefaultResponse, error)
+	HandleBookCUD(context.Context, *CUDBookRequest) (*DefaultResponse, error)
+	// Get handlers
+	HandleGettAllAuthors(context.Context, *DefaultRequest) (*GetAuthorResponse, error)
+	HandleGetAllBooks(context.Context, *DefaultRequest) (*DefaultResponse, error)
 	mustEmbedUnimplementedLibraryServer()
 }
 
@@ -65,11 +91,17 @@ type LibraryServer interface {
 type UnimplementedLibraryServer struct {
 }
 
-func (UnimplementedLibraryServer) HandlerAuthorCUD(context.Context, *CUDAuthorRequest) (*CUDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HandlerAuthorCUD not implemented")
+func (UnimplementedLibraryServer) HandleAuthorCUD(context.Context, *CUDAuthorRequest) (*DefaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleAuthorCUD not implemented")
 }
-func (UnimplementedLibraryServer) HandlerBookCUD(context.Context, *CUDAuthorRequest) (*CUDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HandlerBookCUD not implemented")
+func (UnimplementedLibraryServer) HandleBookCUD(context.Context, *CUDBookRequest) (*DefaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleBookCUD not implemented")
+}
+func (UnimplementedLibraryServer) HandleGettAllAuthors(context.Context, *DefaultRequest) (*GetAuthorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleGettAllAuthors not implemented")
+}
+func (UnimplementedLibraryServer) HandleGetAllBooks(context.Context, *DefaultRequest) (*DefaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleGetAllBooks not implemented")
 }
 func (UnimplementedLibraryServer) mustEmbedUnimplementedLibraryServer() {}
 
@@ -84,38 +116,74 @@ func RegisterLibraryServer(s grpc.ServiceRegistrar, srv LibraryServer) {
 	s.RegisterService(&Library_ServiceDesc, srv)
 }
 
-func _Library_HandlerAuthorCUD_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Library_HandleAuthorCUD_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CUDAuthorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LibraryServer).HandlerAuthorCUD(ctx, in)
+		return srv.(LibraryServer).HandleAuthorCUD(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Library/HandlerAuthorCUD",
+		FullMethod: "/Library/HandleAuthorCUD",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LibraryServer).HandlerAuthorCUD(ctx, req.(*CUDAuthorRequest))
+		return srv.(LibraryServer).HandleAuthorCUD(ctx, req.(*CUDAuthorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Library_HandlerBookCUD_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CUDAuthorRequest)
+func _Library_HandleBookCUD_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CUDBookRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LibraryServer).HandlerBookCUD(ctx, in)
+		return srv.(LibraryServer).HandleBookCUD(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Library/HandlerBookCUD",
+		FullMethod: "/Library/HandleBookCUD",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LibraryServer).HandlerBookCUD(ctx, req.(*CUDAuthorRequest))
+		return srv.(LibraryServer).HandleBookCUD(ctx, req.(*CUDBookRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Library_HandleGettAllAuthors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DefaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LibraryServer).HandleGettAllAuthors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Library/HandleGettAllAuthors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LibraryServer).HandleGettAllAuthors(ctx, req.(*DefaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Library_HandleGetAllBooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DefaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LibraryServer).HandleGetAllBooks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Library/HandleGetAllBooks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LibraryServer).HandleGetAllBooks(ctx, req.(*DefaultRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,12 +196,20 @@ var Library_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*LibraryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "HandlerAuthorCUD",
-			Handler:    _Library_HandlerAuthorCUD_Handler,
+			MethodName: "HandleAuthorCUD",
+			Handler:    _Library_HandleAuthorCUD_Handler,
 		},
 		{
-			MethodName: "HandlerBookCUD",
-			Handler:    _Library_HandlerBookCUD_Handler,
+			MethodName: "HandleBookCUD",
+			Handler:    _Library_HandleBookCUD_Handler,
+		},
+		{
+			MethodName: "HandleGettAllAuthors",
+			Handler:    _Library_HandleGettAllAuthors_Handler,
+		},
+		{
+			MethodName: "HandleGetAllBooks",
+			Handler:    _Library_HandleGetAllBooks_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
