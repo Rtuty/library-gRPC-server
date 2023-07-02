@@ -7,7 +7,7 @@ import (
 )
 
 // authorMethodsHandler паттерн простая фабрика, получает указание операции и структуру автора, после чего производит манипуляцию в базе данных
-func (db *dataBase) AuthorMethodsHandler(ctx context.Context, operation string, author models.Author) error {
+func (db *DataBase) AuthorMethodsHandler(ctx context.Context, operation string, author models.Author) error {
 	t, err := db.client.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (db *dataBase) AuthorMethodsHandler(ctx context.Context, operation string, 
 }
 
 // GetAllAuthors возвращает всех авторов из базы данных
-func (db *dataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) {
+func (db *DataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) {
 	q := "select id, name, country from authors"
 
 	r, err := db.client.QueryContext(ctx, q)
@@ -65,7 +65,7 @@ func (db *dataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) 
 	return authors, nil
 }
 
-func (db *dataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) {
+func (db *DataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) {
 	q := `select a.id, a.name, a.country 
 			 from authors a 
 			inner join books b on b.author_id = a.id and b.title = ?`
@@ -83,6 +83,6 @@ func (db *dataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]m
 	return authors, nil
 }
 
-func (db *dataBase) GetAuthorById(ctx context.Context, id string) (models.Author, error) {
+func (db *DataBase) GetAuthorById(ctx context.Context, id string) (models.Author, error) {
 	return models.Author{}, nil
 }

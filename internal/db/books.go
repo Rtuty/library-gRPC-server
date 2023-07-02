@@ -6,7 +6,7 @@ import (
 )
 
 // bookMethodsHandler паттерн простая фабрика, получает указание операции и структуру книги, после чего производит манипуляцию в базе данных
-func (db *dataBase) BookMethodsHandler(ctx context.Context, operation string, book models.Book) error {
+func (db *DataBase) BookMethodsHandler(ctx context.Context, operation string, book models.Book) error {
 	t, err := db.client.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (db *dataBase) BookMethodsHandler(ctx context.Context, operation string, bo
 }
 
 // GET Books methods
-func (db *dataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
+func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 	q := "select id, title, author_id, description from books"
 
 	r, err := db.client.QueryContext(ctx, q)
@@ -60,9 +60,9 @@ func (db *dataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 	return books, nil
 }
 
-func (db *dataBase) GetBookById(ctx context.Context, id string) (models.Book, error) {
+func (db *DataBase) GetBookById(ctx context.Context, id string) (models.Book, error) {
 	return models.Book{}, nil
 }
-func (db *dataBase) GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error) {
+func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error) {
 	return []models.Book{}, nil
 }

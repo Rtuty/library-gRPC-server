@@ -24,10 +24,10 @@ type Repository interface {
 	GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
 }
 
-type dataBase struct {
+type DataBase struct {
 	client *sql.DB
 }
 
 func NewMySqlRepository(connection *sql.DB) Repository {
-	return &dataBase{client: connection}
+	return &DataBase{client: connection}
 }
