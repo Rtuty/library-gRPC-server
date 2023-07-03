@@ -50,9 +50,7 @@ func (db *DataBase) AuthorMethodsHandler(ctx context.Context, operation string, 
 
 // GetAllAuthors возвращает всех авторов из базы данных
 func (db *DataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) {
-	q := "select id, name, country from authors"
-
-	r, err := db.client.QueryContext(ctx, q)
+	r, err := db.client.QueryContext(ctx, "select id, name, country from authors")
 	if err != nil {
 		return nil, rowsQueryError
 	}
@@ -65,6 +63,7 @@ func (db *DataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) 
 	return authors, nil
 }
 
+// GetAuthorsByBookName возвращает список авторов по наименованию книги
 func (db *DataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) {
 	q := `select a.id, a.name, a.country 
 			 from authors a 
@@ -83,6 +82,12 @@ func (db *DataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]m
 	return authors, nil
 }
 
-func (db *DataBase) GetAuthorById(ctx context.Context, id string) (models.Author, error) {
-	return models.Author{}, nil
+// GetAuthorById получает автора по id
+func (db *DataBase) GetAuthorById(ctx context.Context, id int64) (models.Author, error) {
+	var a models.Author
+	if err := db.client.QueryRowContext(ctx, "select a.id, a.name, a.country from authors a where a.id = ?", id).Scan(&a.ID, &a.Name, &a.Country); err != nil {
+		return models.Author{}, rowsQueryError
+	}
+
+	return a, nil
 }

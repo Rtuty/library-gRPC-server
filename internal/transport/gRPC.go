@@ -4,7 +4,6 @@ import (
 	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 	"modules/internal/db"
 	"modules/internal/models"
 	"modules/internal/transport/library"
@@ -17,13 +16,13 @@ type LibraryServer struct {
 
 /*
 CUD:
-
 	C-create,
 	U-update,
 	D-delete
-
 DataBase sql functionality with local entities
 */
+
+// HandleAuthorCUD обрабатывает запрос от клиента на создание, удаление и обновление сущности автор
 func (s *LibraryServer) HandleAuthorCUD(ctx context.Context, ls *library.CUDAuthorRequest) (*library.DefaultResponse, error) {
 	var a models.Author
 
@@ -32,11 +31,12 @@ func (s *LibraryServer) HandleAuthorCUD(ctx context.Context, ls *library.CUDAuth
 	a.Country = ls.Author.Country
 
 	if err := s.Db.AuthorMethodsHandler(ctx, ls.Operation, a); err != nil {
-		log.Fatal("AuthorMethodsHandler error")
+		return nil, status.Errorf(codes.Aborted, "HandleAuthorCUD error: %s", err)
 	}
 	return &library.DefaultResponse{Result: "Done"}, nil
 }
 
+// HandleBookCUD обрабатывает запрос от клиента на создание, удаление и обновление сущности книга
 func (s *LibraryServer) HandleBookCUD(ctx context.Context, ls *library.CUDBookRequest) (*library.DefaultResponse, error) {
 	var b models.Book
 
@@ -46,7 +46,7 @@ func (s *LibraryServer) HandleBookCUD(ctx context.Context, ls *library.CUDBookRe
 	b.Description = ls.Book.Description
 
 	if err := s.Db.BookMethodsHandler(ctx, ls.Operation, b); err != nil {
-		log.Fatal("BookMethodsHandler error")
+		return nil, status.Errorf(codes.Aborted, "BookMethodsHandler error: %s", err)
 	}
 	return &library.DefaultResponse{Result: "Done"}, nil
 }
@@ -55,7 +55,7 @@ func (s *LibraryServer) HandleBookCUD(ctx context.Context, ls *library.CUDBookRe
 func (s *LibraryServer) GetAllAuthors(ctx context.Context, ls *library.DefaultRequest) (*library.Authors, error) {
 	a, err := s.Db.GetAllAuthors(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unimplemented, "GetAllAuthors error: %s", err)
+		return nil, status.Errorf(codes.Aborted, "GetAllAuthors error: %s", err)
 	}
 
 	res := &library.Authors{
@@ -78,7 +78,7 @@ func (s *LibraryServer) GetAllAuthors(ctx context.Context, ls *library.DefaultRe
 func (s *LibraryServer) GetAllBooks(ctx context.Context, ls *library.DefaultRequest) (*library.Books, error) {
 	b, err := s.Db.GetAllBooks(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unimplemented, "GetAllBooks error: %s", err)
+		return nil, status.Errorf(codes.Aborted, "GetAllBooks error: %s", err)
 	}
 
 	res := &library.Books{
@@ -99,17 +99,77 @@ func (s *LibraryServer) GetAllBooks(ctx context.Context, ls *library.DefaultRequ
 }
 
 func (s *LibraryServer) GetAuthorById(ctx context.Context, ls *library.IdRequest) (*library.Author, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorById not implemented")
+	a, err := s.Db.GetAuthorById(ctx, ls.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "GetAuthorById error: %s", err)
+	}
+
+	res := &library.Author{
+		ID:      a.ID,
+		Name:    a.Name,
+		Country: a.Country,
+	}
+
+	return res, nil
 }
 
 func (s *LibraryServer) GetBookById(ctx context.Context, ls *library.IdRequest) (*library.Book, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBookById not implemented")
+	b, err := s.Db.GetBookById(ctx, ls.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "GetBookById error: %s", err)
+	}
+
+	res := &library.Book{
+		ID:          b.ID,
+		Title:       b.Title,
+		AuthorId:    b.AuthorId,
+		Description: b.Description,
+	}
+
+	return res, nil
 }
 
 func (s *LibraryServer) GetAuthorsByBookName(ctx context.Context, ls *library.Book) (*library.Authors, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorsByBookName not implemented")
+	a, err := s.Db.GetAuthorsByBookName(ctx, ls.Title)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "GetAuthorsByBookName error: %s", err)
+	}
+
+	res := &library.Authors{
+		Authors: []*library.Author{},
+	}
+
+	for _, v := range a {
+		res.Authors = append(res.Authors,
+			&library.Author{
+				ID:      v.ID,
+				Name:    v.Name,
+				Country: v.Country,
+			})
+	}
+
+	return res, nil
 }
 
 func (s *LibraryServer) GetBooksByAuthorId(ctx context.Context, ls *library.IdRequest) (*library.Books, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBooksByAuthorId not implemented")
+	b, err := s.Db.GetBooksByAuthorId(ctx, ls.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "GetBooksByAuthorId error: %s", err)
+	}
+
+	res := &library.Books{
+		Books: []*library.Book{},
+	}
+
+	for _, v := range b {
+		res.Books = append(res.Books,
+			&library.Book{
+				ID:          v.ID,
+				Title:       v.Title,
+				AuthorId:    v.AuthorId,
+				Description: v.Description,
+			})
+	}
+
+	return res, nil
 }

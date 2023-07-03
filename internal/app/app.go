@@ -12,7 +12,6 @@ import (
 )
 
 func RunServer() {
-	//ctx := context.Background()
 	cf, err := config.GetConnection()
 	if err != nil {
 		panic(err)

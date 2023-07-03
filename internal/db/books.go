@@ -43,7 +43,7 @@ func (db *DataBase) BookMethodsHandler(ctx context.Context, operation string, bo
 	return nil
 }
 
-// GET Books methods
+// GetAllBooks возвращает все книги, которых хранятся в базе данных
 func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 	q := "select id, title, author_id, description from books"
 
@@ -60,17 +60,29 @@ func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 	return books, nil
 }
 
-func (db *DataBase) GetBookById(ctx context.Context, id string) (models.Book, error) {
-	//q := "select id, title, author_id, description from books"
-	//
-	//r, err := db.client.QueryContext(ctx, q)
-	//if err != nil {
-	//	return models.Book{}, rowsQueryError
-	//}
+// GetBooksByAuthorId возвращает книги по id автора
+func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id int64) ([]models.Book, error) {
+	q := "select id, title, author_id, description from books where author_id = ?"
 
-	return models.Book{}, nil
+	r, err := db.client.QueryContext(ctx, q, id)
+	if err != nil {
+		return nil, rowsQueryError
+	}
+
+	books, err := scanBooksRows(r)
+	if err != nil {
+		return nil, scanError
+	}
+
+	return books, nil
 }
-func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error) {
-	//q := "select id, title, author_id, description from books where author_id = ?"
-	return []models.Book{}, nil
+
+// GetBookById возвращает книгу по id
+func (db *DataBase) GetBookById(ctx context.Context, id int64) (models.Book, error) {
+	var b models.Book
+	if err := db.client.QueryRowContext(ctx, "select id, title, author_id, description from books where id = ?", id).Scan(&b.ID, &b.Title, &b.AuthorId, &b.Description); err != nil {
+		return models.Book{}, rowsQueryError
+	}
+
+	return b, nil
 }

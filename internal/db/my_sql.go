@@ -16,11 +16,11 @@ type Repository interface {
 	AuthorMethodsHandler(ctx context.Context, operation string, author models.Author) error //factory handler
 
 	GetAllBooks(ctx context.Context) ([]models.Book, error)
-	GetBookById(ctx context.Context, id string) (models.Book, error)
-	GetBooksByAuthorId(ctx context.Context, id string) ([]models.Book, error)
+	GetBookById(ctx context.Context, id int64) (models.Book, error)
+	GetBooksByAuthorId(ctx context.Context, id int64) ([]models.Book, error)
 
 	GetAllAuthors(ctx context.Context) ([]models.Author, error)
-	GetAuthorById(ctx context.Context, id string) (models.Author, error)
+	GetAuthorById(ctx context.Context, id int64) (models.Author, error)
 	GetAuthorsByBookName(ctx context.Context, title string) ([]models.Author, error) // Возвращаем массив авторов, так как у одной книги их может быть несколько
 }
 
