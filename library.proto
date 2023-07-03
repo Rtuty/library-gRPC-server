@@ -8,11 +8,19 @@ message Author {
   string Country = 3;
 }
 
+message Authors {
+  repeated Author Authors = 1;
+}
+
 message Book {
   int64 ID = 1;
   string Title = 2;
   string AuthorId = 3;
   string Description =4;
+}
+
+message Books {
+  repeated Book Books =1;
 }
 
 // Requests
@@ -28,18 +36,14 @@ message CUDBookRequest {
 
 message DefaultRequest {}
 
+message IdRequest{
+  int64 id = 1;
+}
+
 // Responses
-message DefaultResponse {
-  string result = 1;
-}
-
-message GetAuthorResponse {
-  string result = 1;
-}
-
-message GetBookResponse {
-  string result = 1;
-}
+message DefaultResponse {string result = 1;}
+message GetAuthorResponse {string result = 1;}
+message GetBookResponse {string result = 1;}
 
 // Service handlers
 service Library {
@@ -48,7 +52,12 @@ service Library {
   rpc HandleBookCUD(CUDBookRequest) returns (DefaultResponse);
 
   // Get handlers
-  rpc HandleGettAllAuthors(DefaultRequest) returns (GetAuthorResponse);
-  rpc HandleGetAllBooks(DefaultRequest) returns (DefaultResponse);
+  rpc GetAllAuthors(DefaultRequest) returns (Authors);
+  rpc GetAllBooks(DefaultRequest) returns (Books);
 
+  rpc GetAuthorById(IdRequest) returns (Author);
+  rpc GetBookById(IdRequest) returns (Book);
+
+  rpc GetAuthorsByBookName(Book) returns (Authors);
+  rpc GetBooksByAuthorId(IdRequest) returns (Books);
 }

@@ -2,6 +2,8 @@ package transport
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"modules/internal/db"
 	"modules/internal/models"
@@ -13,6 +15,15 @@ type LibraryServer struct {
 	library.UnimplementedLibraryServer
 }
 
+/*
+CUD:
+
+	C-create,
+	U-update,
+	D-delete
+
+DataBase sql functionality with local entities
+*/
 func (s *LibraryServer) HandleAuthorCUD(ctx context.Context, ls *library.CUDAuthorRequest) (*library.DefaultResponse, error) {
 	var a models.Author
 
@@ -38,4 +49,67 @@ func (s *LibraryServer) HandleBookCUD(ctx context.Context, ls *library.CUDBookRe
 		log.Fatal("BookMethodsHandler error")
 	}
 	return &library.DefaultResponse{Result: "Done"}, nil
+}
+
+// GetAllAuthors возращает список авторов из базы данных
+func (s *LibraryServer) GetAllAuthors(ctx context.Context, ls *library.DefaultRequest) (*library.Authors, error) {
+	a, err := s.Db.GetAllAuthors(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unimplemented, "GetAllAuthors error: %s", err)
+	}
+
+	res := &library.Authors{
+		Authors: []*library.Author{},
+	}
+
+	for _, v := range a {
+		res.Authors = append(res.Authors,
+			&library.Author{
+				ID:      v.ID,
+				Name:    v.Name,
+				Country: v.Country,
+			})
+	}
+
+	return res, nil
+}
+
+// GetAllBooks возращает список книг из базы данных
+func (s *LibraryServer) GetAllBooks(ctx context.Context, ls *library.DefaultRequest) (*library.Books, error) {
+	b, err := s.Db.GetAllBooks(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unimplemented, "GetAllBooks error: %s", err)
+	}
+
+	res := &library.Books{
+		Books: []*library.Book{},
+	}
+
+	for _, v := range b {
+		res.Books = append(res.Books,
+			&library.Book{
+				ID:          v.ID,
+				Title:       v.Title,
+				AuthorId:    v.AuthorId,
+				Description: v.Description,
+			})
+	}
+
+	return res, nil
+}
+
+func (s *LibraryServer) GetAuthorById(ctx context.Context, ls *library.IdRequest) (*library.Author, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorById not implemented")
+}
+
+func (s *LibraryServer) GetBookById(ctx context.Context, ls *library.IdRequest) (*library.Book, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBookById not implemented")
+}
+
+func (s *LibraryServer) GetAuthorsByBookName(ctx context.Context, ls *library.Book) (*library.Authors, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorsByBookName not implemented")
+}
+
+func (s *LibraryServer) GetBooksByAuthorId(ctx context.Context, ls *library.IdRequest) (*library.Books, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBooksByAuthorId not implemented")
 }
