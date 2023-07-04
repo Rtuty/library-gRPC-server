@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  library-service:
+    build: ./
+    command: ./library-service
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    environment:
+      - HOST=localhost
+      - PORT=3306
+      - USER=root
+      - PASSWD=5218521111
+      - DBNAME=library
+
+  db:
+    restart: always
+    image: mysql:latest
+    volumes:
+      - ./data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 5218521111
+      MYSQL_DATABASE: library
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 5218521111
+      MYSQL_LOG_CONSOLE: "true"
+      MYSQL_INITDB_SKIP_TZINFO: "true"
+    ports:
+      - 3306:3306

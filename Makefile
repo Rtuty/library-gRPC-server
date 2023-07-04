@@ -7,6 +7,12 @@ endif
 
 SRC=C:/Users/kirill/Desktop
 
+docker:
+	#docker build -t library-service .
+	#docker run --name=grpc-library-service -p 8000:8000 library-service
+	docker-compose up --build library-service
+
+
 prepare:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
