@@ -55,12 +55,17 @@ func (db *DataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) 
 		return nil, rowsQueryError
 	}
 
-	authors, err := scanAuthorRows(r)
+	authors, err := scanRows(r, "author")
 	if err != nil {
 		return nil, scanError
 	}
 
-	return authors, nil
+	result, err := convertToAuthors(authors)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetAuthorsByBookName возвращает список авторов по наименованию книги
@@ -74,17 +79,23 @@ func (db *DataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]m
 		return nil, rowsQueryError
 	}
 
-	authors, err := scanAuthorRows(r)
+	authors, err := scanRows(r, "author")
 	if err != nil {
 		return nil, scanError
 	}
 
-	return authors, nil
+	result, err := convertToAuthors(authors)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetAuthorById получает автора по id
 func (db *DataBase) GetAuthorById(ctx context.Context, id int64) (models.Author, error) {
 	var a models.Author
+
 	if err := db.client.QueryRowContext(ctx, "select a.id, a.name, a.country from authors a where a.id = ?", id).Scan(&a.ID, &a.Name, &a.Country); err != nil {
 		return models.Author{}, rowsQueryError
 	}

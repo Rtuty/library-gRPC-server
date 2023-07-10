@@ -52,12 +52,17 @@ func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 		return nil, rowsQueryError
 	}
 
-	books, err := scanBooksRows(r)
+	books, err := scanRows(r, "book")
 	if err != nil {
 		return nil, scanError
 	}
 
-	return books, nil
+	result, err := convertToBooks(books)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetBooksByAuthorId возвращает книги по id автора
@@ -69,12 +74,17 @@ func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id int64) ([]models.
 		return nil, rowsQueryError
 	}
 
-	books, err := scanBooksRows(r)
+	books, err := scanRows(r, "book")
 	if err != nil {
 		return nil, scanError
 	}
 
-	return books, nil
+	result, err := convertToBooks(books)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetBookById возвращает книгу по id
