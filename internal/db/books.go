@@ -18,7 +18,7 @@ func (db *DataBase) BookMethodsHandler(ctx context.Context, operation string, bo
 
 		db.client.QueryRowContext(ctx, "select exists(select 1 from books where id = ?)", book.ID).Scan(&exists)
 		if exists {
-			return dublicateError
+			return duplicateError
 		}
 
 		if _, err = t.ExecContext(ctx, "insert into books (title, author_id, description) values (?, ?, ?)", book.Title, book.AuthorId, book.Description); err != nil {
@@ -57,7 +57,7 @@ func (db *DataBase) GetAllBooks(ctx context.Context) ([]models.Book, error) {
 		return nil, scanError
 	}
 
-	result, err := convertToBooks(books)
+	result, err := convertEntity[models.Book](books)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (db *DataBase) GetBooksByAuthorId(ctx context.Context, id int64) ([]models.
 		return nil, scanError
 	}
 
-	result, err := convertToBooks(books)
+	result, err := convertEntity[models.Book](books)
 	if err != nil {
 		return nil, err
 	}

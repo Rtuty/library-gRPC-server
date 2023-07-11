@@ -8,7 +8,7 @@ import (
 
 var (
 	// local methods errors
-	dublicateError = errors.New("the entity being created already exists in the database")
+	duplicateError = errors.New("the entity being created already exists in the database")
 	convertError   = errors.New("invalid item type in the array")
 	// client methods errors
 	scanError      = errors.New("error when scanning strings after query execution")
@@ -53,32 +53,16 @@ func scanRows(r *sql.Rows, modelType string) ([]interface{}, error) {
 	return entities, nil
 }
 
-// convertToAuthors Приводит сущности из пустого интерфейса к типу author
-func convertToAuthors(entity []interface{}) ([]models.Author, error) {
-	var authors []models.Author
+// convertEntity Конвертирует пустой интерфейс к массиву authors/books
+func convertEntity[T models.Author | models.Book](entity []interface{}) ([]T, error) {
+	var entities []T
 
 	for _, e := range entity {
-		if a, ok := e.(models.Author); ok {
-			authors = append(authors, a)
+		if e1, ok := e.(T); ok {
+			entities = append(entities, e1)
 		} else {
-			return nil, convertError
+			return make([]T, 0), convertError
 		}
 	}
-
-	return authors, nil
-}
-
-// convertToBooks Приводит сущности из пустого интерфейса к типу book
-func convertToBooks(entity []interface{}) ([]models.Book, error) {
-	var books []models.Book
-
-	for _, e := range entity {
-		if b, ok := e.(models.Book); ok {
-			books = append(books, b)
-		} else {
-			return nil, convertError
-		}
-	}
-
-	return books, nil
+	return entities, nil
 }

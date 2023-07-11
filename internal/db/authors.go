@@ -23,7 +23,7 @@ func (db *DataBase) AuthorMethodsHandler(ctx context.Context, operation string, 
 				return rollbackError
 			}
 
-			return dublicateError
+			return duplicateError
 		}
 
 		if _, err = t.ExecContext(ctx, "insert into authors (name, country) values (?, ?)", author.Name, author.Country); err != nil {
@@ -60,7 +60,7 @@ func (db *DataBase) GetAllAuthors(ctx context.Context) ([]models.Author, error) 
 		return nil, scanError
 	}
 
-	result, err := convertToAuthors(authors)
+	result, err := convertEntity[models.Author](authors)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (db *DataBase) GetAuthorsByBookName(ctx context.Context, title string) ([]m
 		return nil, scanError
 	}
 
-	result, err := convertToAuthors(authors)
+	result, err := convertEntity[models.Author](authors)
 	if err != nil {
 		return nil, err
 	}
